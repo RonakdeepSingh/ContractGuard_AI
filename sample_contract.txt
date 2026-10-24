@@ -1,0 +1,19 @@
+SERVICE AGREEMENT
+
+This Service Agreement is made between BrightLeaf Software Pvt. Ltd. ("Provider") and Northwind Traders ("Customer") and takes effect on the date both parties have signed it.
+
+The Provider will supply the website hosting and maintenance services described in Schedule A, and the Customer will pay the monthly fee listed in Schedule B within fifteen days of receiving each invoice.
+
+This Agreement runs for an initial term of twenty-four months. After that, it will automatically renew for further successive twenty-four month terms unless the Customer gives written notice of non-renewal at least one hundred and eighty days before the end of the then-current term.
+
+The Provider may terminate this Agreement at any time, for any reason, by giving the Customer seven days written notice. The Customer may terminate only for an uncured material breach by the Provider.
+
+The Customer shall be fully liable for, and shall indemnify the Provider against, all losses, damages, claims and expenses of any kind arising from the Customer's use of the services, without any limit on the amount of such liability.
+
+All websites, designs, code, content and other materials created by the Customer in connection with this Agreement shall be the sole and exclusive property of the Provider, and the Customer hereby assigns all rights in them to the Provider.
+
+During the term of this Agreement and for three years afterwards, the Customer shall not engage any other provider of hosting or maintenance services anywhere in India, and shall not operate a business that competes with the Provider.
+
+Neither party may assign or transfer this Agreement to any third party without the prior written consent of the other party, and any change in ownership of the Customer is treated as an assignment.
+
+All notices under this Agreement must be in writing and sent to the addresses written at the top of this Agreement. This Agreement is governed by the laws of India.
