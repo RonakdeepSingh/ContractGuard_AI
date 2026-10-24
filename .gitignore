@@ -3,3 +3,5 @@ data/
 __pycache__/
 output.txt
 report.txt
+report2.txt
+cache.json
