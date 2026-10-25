@@ -12,7 +12,7 @@ load_dotenv()
 INDEX_NAME = "contractguard"
 MODEL = "llama-text-embed-v2"
 TOP_K = 5
-THRESHOLD = 0.50  # minimum similarity to call a clause "risky"  # minimum similarity to call a clause "risky"
+THRESHOLD = 0.45  # minimum similarity to call a clause "risky"
 BATCH = 96
 
 pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
