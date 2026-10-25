@@ -44,7 +44,7 @@ class RedlineBatch(BaseModel):
     items: list[ClauseRedline]
 
 
-llm = ChatGoogleGenerativeAI(model=GEMINI_MODEL, temperature=0, max_retries=1)
+llm = ChatGoogleGenerativeAI(model=GEMINI_MODEL, temperature=0, max_retries=0)
 analyzer_llm = llm.with_structured_output(AnalysisBatch)
 negotiator_llm = llm.with_structured_output(RedlineBatch)
 
