@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ContractGuard AI</title>
+<style>
+  body { font-family: "Times New Roman", serif; max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; color: #111; background: #fff; }
+  h1 { margin-bottom: 4px; }
+  .sub { color: #555; margin-top: 0; }
+  .box { border: 1px solid #111; padding: 16px; margin: 18px 0; }
+  button { font-family: inherit; font-size: 16px; padding: 8px 18px; border: 1px solid #111; background: #111; color: #fff; cursor: pointer; }
+  button:disabled { background: #888; border-color: #888; cursor: wait; }
+  .note { font-size: 14px; color: #555; }
+  .error { border: 1px solid #a00; color: #a00; padding: 10px; margin: 12px 0; }
+  .summary { font-size: 17px; margin: 18px 0 6px; }
+  .card { border: 1px solid #111; margin: 16px 0; padding: 14px 16px; }
+  .head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+  .type { font-weight: bold; font-size: 18px; }
+  .badge { font-size: 13px; padding: 2px 10px; border: 1px solid #111; font-weight: bold; }
+  .High { background: #111; color: #fff; }
+  .Medium { background: #ddd; }
+  .Low { background: #fff; color: #555; border-color: #999; }
+  .clause { font-style: italic; color: #333; margin: 8px 0; font-size: 15px; }
+  .label { font-weight: bold; margin-top: 10px; }
+  .rewrite { background: #f2f2f2; padding: 10px; margin-top: 4px; }
+  .critic { font-size: 14px; margin-top: 10px; }
+  .warn { font-size: 14px; color: #a00; margin-top: 6px; }
+  details { margin-top: 8px; }
+  footer { margin-top: 40px; font-size: 13px; color: #555; }
+</style>
+</head>
+<body>
+<h1>ContractGuard AI</h1>
+<p class="sub">Upload a contract and get a clause-by-clause risk review with suggested fairer wording.</p>
+
+<div class="box">
+  <input type="file" id="file" accept=".pdf,.docx,.txt">
+  <button id="go">Analyze contract</button>
+  <p class="note">Use sample or public contracts only. Each new contract uses a few of the free daily AI requests; contracts you have already analyzed are instant.</p>
+  <label class="note"><input type="checkbox" id="showLow"> Show low-risk items too</label>
+</div>
+
+<div id="status"></div>
+<div id="results"></div>
+<footer>These are AI-generated suggestions, not legal advice. Have a lawyer review anything important.</footer>
+
+<script>
+let lastData = null;
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function field(card, label, text, cls) {
+  card.appendChild(el("div", "label", label));
+  card.appendChild(el("div", cls || "", text));
+}
+
+function render() {
+  const out = document.getElementById("results");
+  out.innerHTML = "";
+  if (!lastData) return;
+  const showLow = document.getElementById("showLow").checked;
+  const items = lastData.items;
+  const count = r => items.filter(i => i.risk === r).length;
+  out.appendChild(el("div", "summary",
+    lastData.clauses_read + " clauses read. " + items.length + " flagged: " +
+    count("High") + " high, " + count("Medium") + " medium, " + count("Low") + " low. " +
+    "(AI requests used: " + lastData.gemini_calls + ")"));
+  if (lastData.some_unavailable)
+    out.appendChild(el("div", "error", "Some clauses could not be analyzed this time, probably because the free daily AI limit was reached. Try again later."));
+
+  let shown = 0;
+  items.forEach(it => {
+    if (it.analysis_ok && it.risk === "Low" && !showLow) return;
+    shown++;
+    const card = el("div", "card");
+    const head = el("div", "head");
+    head.appendChild(el("span", "type", "Clause " + it.number + ": " + (it.type || it.label)));
+    if (it.risk) head.appendChild(el("span", "badge " + it.risk, it.risk + " risk"));
+    card.appendChild(head);
+    card.appendChild(el("div", "clause", it.clause.length > 300 ? it.clause.slice(0, 300) + "..." : it.clause));
+    if (!it.analysis_ok) {
+      card.appendChild(el("div", "warn", "Analysis unavailable for this clause this time."));
+    } else {
+      field(card, "In plain English", it.explanation);
+      field(card, "What to check", it.what_to_check);
+      if (it.rewrite) {
+        field(card, "Suggested fairer wording", it.rewrite, "rewrite");
+        field(card, "What changed", it.what_changed);
+        field(card, "If they refuse, ask for", it.fallback);
+        let c = "Critic check: " + it.critic;
+        if (it.issues && it.issues.length) c += " - " + it.issues.join("; ");
+        card.appendChild(el("div", "critic", c));
+        if (it.new_figures && it.new_figures.length)
+          card.appendChild(el("div", "warn", "Automatic check: the rewrite contains figures not in the original clause: " + it.new_figures.join(", ")));
+      }
+    }
+    out.appendChild(card);
+  });
+  if (shown === 0 && items.length > 0)
+    out.appendChild(el("p", "note", "Only low-risk items were flagged. Tick the box above to see them."));
+  if (items.length === 0)
+    out.appendChild(el("p", "note", "No risky clauses were found."));
+}
+
+document.getElementById("showLow").addEventListener("change", render);
+
+document.getElementById("go").addEventListener("click", async () => {
+  const f = document.getElementById("file").files[0];
+  const status = document.getElementById("status");
+  const btn = document.getElementById("go");
+  status.innerHTML = "";
+  if (!f) { status.appendChild(el("div", "error", "Please choose a file first.")); return; }
+  btn.disabled = true;
+  status.appendChild(el("p", "note", "Analyzing... this can take up to a minute for a new contract."));
+  const form = new FormData();
+  form.append("file", f);
+  try {
+    const res = await fetch("/analyze", { method: "POST", body: form });
+    const data = await res.json();
+    status.innerHTML = "";
+    if (!res.ok) { status.appendChild(el("div", "error", data.detail || "Something went wrong.")); lastData = null; render(); }
+    else { lastData = data; render(); }
+  } catch (e) {
+    status.innerHTML = "";
+    status.appendChild(el("div", "error", "Could not reach the server. Is it still running?"));
+  }
+  btn.disabled = false;
+});
+</script>
+</body>
+</html>
