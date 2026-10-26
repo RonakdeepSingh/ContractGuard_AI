@@ -113,7 +113,10 @@ def format_report(out):
         shown += 1
         lines.append(f"Clause {i}: {r['clause'][:100]}...")
         if a is None:
-            lines += ["   (analysis unavailable this run, please try again)", ""]
+            if r["top_score"] < p4.AI_THRESHOLD:
+                lines += [f"   Possible {r['label']} (low confidence, not reviewed by AI)", ""]
+            else:
+                lines += ["   (analysis unavailable this run, please try again)", ""]
             continue
         revised = rev is not None and rev.verdict == "Revised"
         lines.append(f"   Type: {a.clause_type}   |   Risk: {a.risk_level}")

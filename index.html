@@ -38,7 +38,7 @@
   <input type="file" id="file" accept=".pdf,.docx,.txt">
   <button id="go">Analyze contract</button>
   <p class="note">Use sample or public contracts only. Each new contract uses a few of the free daily AI requests; contracts you have already analyzed are instant.</p>
-  <label class="note"><input type="checkbox" id="showLow"> Show low-risk items too</label>
+  <label class="note"><input type="checkbox" id="showLow"> Show low-risk and low-confidence items too</label>
 </div>
 
 <div id="status"></div>
@@ -66,24 +66,31 @@ function render() {
   if (!lastData) return;
   const showLow = document.getElementById("showLow").checked;
   const items = lastData.items;
-  const count = r => items.filter(i => i.risk === r).length;
+  const reviewed = items.filter(i => !i.low_confidence);
+  const weak = items.length - reviewed.length;
+  const count = r => reviewed.filter(i => i.risk === r).length;
   out.appendChild(el("div", "summary",
-    lastData.clauses_read + " clauses read. " + items.length + " flagged: " +
+    lastData.clauses_read + " clauses read. " + reviewed.length + " reviewed by AI: " +
     count("High") + " high, " + count("Medium") + " medium, " + count("Low") + " low. " +
+    (weak ? weak + " weak matches not sent to the AI (tick the box to see them). " : "") +
     "(AI requests used: " + lastData.gemini_calls + ")"));
   if (lastData.some_unavailable)
-        out.appendChild(el("div", "error", "Some clauses could not be analyzed this time. The AI service may have been busy, or the free daily limit may have been reached. Wait a while and try again; finished results are saved."));
+    out.appendChild(el("div", "error", "Some clauses could not be analyzed this time. The AI service may have been busy, or the free daily limit may have been reached. Wait a while and try again; finished results are saved."));
+
   let shown = 0;
   items.forEach(it => {
-    if (it.analysis_ok && it.risk === "Low" && !showLow) return;
+    if ((it.low_confidence || (it.analysis_ok && it.risk === "Low")) && !showLow) return;
     shown++;
     const card = el("div", "card");
     const head = el("div", "head");
-    head.appendChild(el("span", "type", "Clause " + it.number + ": " + (it.type || it.label)));
-    if (it.risk) head.appendChild(el("span", "badge " + it.risk, it.risk + " risk"));
+    head.appendChild(el("span", "type", "Clause " + it.number + ": " + (it.low_confidence ? "Possible " + it.label : (it.type || it.label))));
+    if (it.low_confidence) head.appendChild(el("span", "badge Low", "Low confidence"));
+    else if (it.risk) head.appendChild(el("span", "badge " + it.risk, it.risk + " risk"));
     card.appendChild(head);
     card.appendChild(el("div", "clause", it.clause.length > 300 ? it.clause.slice(0, 300) + "..." : it.clause));
-    if (!it.analysis_ok) {
+    if (it.low_confidence) {
+      card.appendChild(el("div", "note", "Weak match with known risky clauses. Not sent to the AI, to save free requests."));
+    } else if (!it.analysis_ok) {
       card.appendChild(el("div", "warn", "Analysis unavailable for this clause this time."));
     } else {
       field(card, "In plain English", it.explanation);

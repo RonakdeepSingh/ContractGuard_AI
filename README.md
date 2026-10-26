@@ -63,7 +63,7 @@ Why several agents instead of one prompt: each step has one job, so the next age
 | **0.45 (used)** | **83.0%** | **33.3%** |
 | 0.40 | 92.7% | 60.0% |
 
-A lower threshold was chosen because missing a dangerous clause is worse than an extra flag; the Analyzer rates harmless items Low and the web page hides low-risk items by default.
+A lower threshold was chosen because missing a dangerous clause is worse than an extra flag; the Analyzer rates harmless items Low and the web page hides low-risk items by default.Clauses scoring between 0.45 and 0.50 are shown as low-confidence possible matches and are not sent to Gemini, to save free requests.
 
 **Sample contract** (`sample_contract.txt`, 9 clauses, checked by hand; a small preliminary test): the Classifier alone got 7 of 9 right, and 9 of 9 after the Analyzer. Batching and saved results reduced AI calls from about 12 to 2 per contract.
 

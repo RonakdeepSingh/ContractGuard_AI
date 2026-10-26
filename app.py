@@ -25,7 +25,9 @@ def build_items(out):
     for i, (r, a, red, rev) in enumerate(rows, start=1):
         if r["label"] == p4.NO_RISK:
             continue
-        item = {"number": i, "clause": r["clause"], "label": r["label"], "analysis_ok": a is not None}
+        low_conf = a is None and r["top_score"] < p4.AI_THRESHOLD
+        item = {"number": i, "clause": r["clause"], "label": r["label"],
+                "analysis_ok": a is not None, "low_confidence": low_conf}
         if a is not None:
             revised = rev is not None and rev.verdict == "Revised"
             item.update({
@@ -79,5 +81,5 @@ def analyze(file: UploadFile = File(...)):
         "clauses_read": len(clauses),
         "items": items,
         "gemini_calls": p4.calls_made - before,
-        "some_unavailable": any(not it["analysis_ok"] for it in items),
+        "some_unavailable": any(not it["analysis_ok"] and not it["low_confidence"] for it in items),
     }

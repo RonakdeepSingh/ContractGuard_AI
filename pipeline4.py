@@ -16,6 +16,7 @@ load_dotenv()
 GEMINI_MODEL = "gemini-3.8-flash"  # if Google renames it, change it here only
 NO_RISK = "No risky pattern found"
 CHUNK = 8  # clauses reviewed per Gemini call
+AI_THRESHOLD = 0.50  # flagged clauses scoring below this are not sent to Gemini (saves requests)
 CACHE_FILE = Path("cache.json")
 calls_made = 0  # counts real Gemini calls in this run
 
@@ -118,7 +119,10 @@ Return exactly one item per clause, using the same clause_number as shown.
 
 def analyzer_agent(state: BatchState):
     analysis = [None] * len(state["results"])
-    flagged = [i for i, r in enumerate(state["results"]) if r["label"] != NO_RISK]
+    flagged = [
+        i for i, r in enumerate(state["results"])
+        if r["label"] != NO_RISK and r["top_score"] >= AI_THRESHOLD
+    ]
     for start in range(0, len(flagged), CHUNK):
         idxs = flagged[start:start + CHUNK]
         batch = cached_call(analyzer_llm, AnalysisBatch, build_analysis_prompt(state, idxs))
