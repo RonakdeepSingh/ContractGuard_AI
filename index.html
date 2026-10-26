@@ -72,8 +72,7 @@ function render() {
     count("High") + " high, " + count("Medium") + " medium, " + count("Low") + " low. " +
     "(AI requests used: " + lastData.gemini_calls + ")"));
   if (lastData.some_unavailable)
-    out.appendChild(el("div", "error", "Some clauses could not be analyzed this time, probably because the free daily AI limit was reached. Try again later."));
-
+        out.appendChild(el("div", "error", "Some clauses could not be analyzed this time. The AI service may have been busy, or the free daily limit may have been reached. Wait a while and try again; finished results are saved."));
   let shown = 0;
   items.forEach(it => {
     if (it.analysis_ok && it.risk === "Low" && !showLow) return;

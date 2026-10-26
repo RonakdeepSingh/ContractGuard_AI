@@ -4,7 +4,7 @@
 
 Built as a 5th-semester MDC project (Computer Science and Engineering) following the V.E.T.S framework.
 
-<!-- Add a screenshot of the web app here: ![ContractGuard web app](docs/screenshot.png) -->
+![ContractGuard web app](docs/screenshot.png)
 
 ## The problem
 
